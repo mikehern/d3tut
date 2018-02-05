@@ -1,19 +1,19 @@
 d3.dsv(',', 'data.csv')
-  .then(d => console.log('csv data: ', d));
+  .then(d => {generate(d.columns), console.log('csv data: ', d)});
 
 // const dataset = [10, 20, 30, 40, 50];
 
-d3.json('data.json')
-  .then(d => {generate(d), console.log('json data:', d)});
+// d3.json('data.json')
+//   .then(d => {generate(d), console.log('json data:', d)});
 
 
 const generate = (dataset) => {
   const el = d3.select('body')
-    .selectAll('p')
+    .selectAll('div')
     .data(dataset)
     .enter()
     .append('div')
-    .text(d => `Testing ${d}`)
+    .text(d => `Combinining string text with ${d}`)
     .attr('class', d => (d > 25) ? 'foo' : null)
     // .append('p')
     // .classed('foo', true)
