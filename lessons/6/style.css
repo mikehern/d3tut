@@ -21,3 +21,8 @@ button{
     display: block;
     margin: 0 auto;
 }
+
+rect:hover {
+    fill: #006bb6;
+    transition: 0.3s all ease-out;
+}

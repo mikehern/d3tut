@@ -23,6 +23,7 @@ var key = function (d) {
 var chart_width = 800;
 var chart_height = 400;
 var bar_padding = 5;
+var isSorted = false;
 var svg = d3.select('#chart')
   .append('svg')
   .attr('width', chart_width)
@@ -53,7 +54,30 @@ svg.selectAll('rect')
   .attr('height', function (d) {
     return yScale(d.num);
   })
-  .attr('fill', '#7ED26D');
+  .attr('fill', '#7ED26D')
+  // .on('mouseover', (d, i, nodes) => {
+  //   d3.select(nodes[i]).transition().duration(150).attr('fill', '#006bb6')
+  // })
+  // .on('mouseout', (d, i, nodes) => {
+  //   d3.select(nodes[i]).transition('change_color_back').duration(350).attr('fill', '#7ed26d')
+  // })
+  .on('click', (d, i, nodes) => {
+    svg
+      .selectAll('rect')
+      .sort((a, b) => (isSorted) ? b.num - a.num : a.num - b.num)
+      .transition('sort')
+      .duration(1000)
+      .attr('x', (d, i) => xScale(i));
+
+    svg
+      .selectAll('text')
+      .sort((a, b) => (isSorted) ? b.num - a.num : a.num - b.num)
+      .transition('sort')
+      .duration(1000)
+      .attr('x', (d, i) => xScale(i) + xScale.bandwidth() / 2);
+    
+    isSorted = !isSorted;
+  });
 
 // Create Labels
 svg.selectAll('text')
@@ -71,11 +95,14 @@ svg.selectAll('text')
   })
   .attr('font-size', 14)
   .attr('fill', '#fff')
-  .attr('text-anchor', 'middle');
+  .attr('text-anchor', 'middle')
+  .attr('pointer-events', 'none');
 
 //Events
 d3.select('.update').on('click', () => {
-  data[0].num = 50;
+
+  data.reverse();
+  // data[0].num = 50;
   yScale.domain([0, d3.max(data, function (d) {
     return d.num;
   })]);
@@ -83,7 +110,7 @@ d3.select('.update').on('click', () => {
   svg.selectAll('rect')
     .data(data, key)
     .transition()
-    .delay((d, i) => i * 100)
+    .delay((d, i) => i / data.length * 1000)
     .duration(1000)
     .attr('y', function (d) {
       return chart_height - yScale(d.num);
@@ -117,7 +144,12 @@ d3.select('.add').on('click', function() {
 
   //Generate new datum
   const newNum = Math.floor(Math.random() * d3.max(data, d => d.num));
-  data.push(newNum);
+  data.push(
+    {
+      key: data[data.length - 1].key + 1,
+      num: newNum
+    }
+  );
 
   //Call and update scale
   xScale.domain(d3.range(data.length));
