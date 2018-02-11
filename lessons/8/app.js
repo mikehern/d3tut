@@ -39,7 +39,7 @@ const yScale = d3.scaleLinear()
 const svg = d3.select('#chart')
   .append('svg')
   .attr('width', chartWidth)
-  .attr('height', chartWidth);
+  .attr('height', chartHeight);
 
 //Create axes
 const xAxis = d3.axisBottom(xScale)
@@ -59,12 +59,43 @@ svg.append('g')
 
 //Create line
 const line = d3.line()
+  //Useful function for removing outliers
+  .defined(d => (d.num > 0 && d.num < 100))
   .x(d => xScale(d.date))
   .y(d => yScale(d.num));
 
+  const redLine = d3.line()
+  //Useful function for removing outliers
+  .defined(d => (d.num >= 100))
+  .x(d => xScale(d.date))
+  .y(d => yScale(d.num));
+
+//Create area
+const area = d3.area()
+  .defined(d => (d.num > 0))
+  .x(d => xScale(d.date))
+  .y0(d => yScale.range()[0])
+  .y1(d => yScale(d.num));
+
+const redArea = d3.area()
+  .defined(d => (d.num > 100))
+  .x(d => xScale(d.date))
+  .y0(d => yScale(100))
+  .y1(d => yScale(d.num));
+
 svg.append('path')
   .datum(data)
-  .attr('d', line);
+  .attr('fill', '#006bb6')
+  // .attr('stroke', '#006bb6')
+  // .attr('stroke-width', 5)
+  .attr('d', area);
+
+svg.append('path')
+  .datum(data)
+  .attr('fill', 'tomato')
+  // .attr('stroke', 'tomato')
+  // .attr('stroke-width', 5)
+  .attr('d', redArea);
 
 
 
