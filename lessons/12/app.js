@@ -7,7 +7,7 @@ const color = d3.scaleQuantize().range(
 
 //Create projection
 const projection = d3.geoAlbersUsa()
-  .scale([chartWidth])
+  .scale([chartWidth] * 2)
   .translate([chartWidth / 2, chartHeight / 2]);
 
 const path = d3.geoPath(projection);
@@ -46,6 +46,51 @@ d3.json('zombie-attacks.json', zombieData => {
       })
       .attr('stroke', 'darkgrey')
       .attr('stroke-width', 1);
+
+    drawCities();
   });
 })
 
+const drawCities = () => {
+  d3.json('us-cities.json', (cityData) => {
+    svg.selectAll('circle')
+      .data(cityData)
+      .enter()
+      .append('circle')
+      .style('fill', 'gold')
+      .style('opacity', 0.8)
+      .attr('cx', d => projection([d.lon, d.lat])[0])
+      .attr('cy', d => projection([d.lon, d.lat])[1])
+      .attr('r', d => Math.sqrt(Number(d.population) * .00005))
+      .append('title')
+      .text(d => d.city);
+  })
+}
+
+d3.selectAll('#buttons button').on('click', (d, i, nodes) => {
+  const offset = projection.translate();
+  const distance = 100;
+  const direction = d3.select(nodes[i]).attr('class');
+
+  if (direction === 'up') {
+    offset[1] += distance;
+  } else if (direction === 'down') {
+    offset[1] -= distance;
+  } else if (direction === 'left') {
+    offset[0] += distance;
+  } else if (direction === 'right') {
+    offset[0] -= distance;
+  }
+
+  projection.translate(offset);
+
+  svg.selectAll('path')
+    .transition()
+    .attr('d', path);
+  
+  svg.selectAll('circle')
+    .transition()
+    .attr('cx', d => projection([d.lon, d.lat])[0])
+    .attr('cy', d => projection([d.lon, d.lat])[1]);
+
+})
