@@ -18,6 +18,34 @@ const svg = d3.select('#chart')
   .attr('width', chartWidth)
   .attr('height', chartHeight);
 
+const dragMap = d3.drag().on('drag', () => {
+  const offset = projection.translate();
+  offset[0] += d3.event.dx;
+  offset[1] += d3.event.dy;
+
+  projection.translate(offset);
+
+  map.selectAll('path')
+    .transition()
+    .attr('d', path);
+
+  map.selectAll('circle')
+    .transition()
+    .attr('cx', d => projection([d.lon, d.lat])[0])
+    .attr('cy', d => projection([d.lon, d.lat])[1]);
+});
+
+const map = svg.append('g')
+  .attr('id', 'map')
+  .call(dragMap);
+
+map.append('rect')
+  .attr('x', 0)
+  .attr('y', 0)
+  .attr('width', chartWidth)
+  .attr('height', chartHeight)
+  .attr('opacity', 0);
+
 //Prep json
 d3.json('zombie-attacks.json', zombieData => {
   color.domain([d3.min(zombieData, d => d.num), d3.max(zombieData, d => d.num)]);
@@ -35,7 +63,7 @@ d3.json('zombie-attacks.json', zombieData => {
 
     // console.log(usData);
 
-    svg.selectAll('path')
+    map.selectAll('path')
       .data(usData.features)
       .enter()
       .append('path')
@@ -53,7 +81,7 @@ d3.json('zombie-attacks.json', zombieData => {
 
 const drawCities = () => {
   d3.json('us-cities.json', (cityData) => {
-    svg.selectAll('circle')
+    map.selectAll('circle')
       .data(cityData)
       .enter()
       .append('circle')
@@ -69,6 +97,7 @@ const drawCities = () => {
 
 d3.selectAll('#buttons button').on('click', (d, i, nodes) => {
   const offset = projection.translate();
+  console.log('offset was now: ', offset);
   const distance = 100;
   const direction = d3.select(nodes[i]).attr('class');
 
@@ -84,13 +113,14 @@ d3.selectAll('#buttons button').on('click', (d, i, nodes) => {
 
   projection.translate(offset);
 
-  svg.selectAll('path')
+  map.selectAll('path')
     .transition()
     .attr('d', path);
   
-  svg.selectAll('circle')
+  map.selectAll('circle')
     .transition()
     .attr('cx', d => projection([d.lon, d.lat])[0])
     .attr('cy', d => projection([d.lon, d.lat])[1]);
 
+  console.log('offset is now: ', offset);
 })
