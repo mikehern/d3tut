@@ -7,8 +7,7 @@ const color = d3.scaleQuantize().range(
 
 //Create projection
 const projection = d3.geoAlbersUsa()
-  .scale([chartWidth] * 2)
-  .translate([chartWidth / 2, chartHeight / 2]);
+  .translate([0, 0]);
 
 const path = d3.geoPath(projection);
 
@@ -18,18 +17,25 @@ const svg = d3.select('#chart')
   .attr('width', chartWidth)
   .attr('height', chartHeight);
 
-const dragMap = d3.drag().on('drag', () => {
-  const offset = projection.translate();
-  offset[0] += d3.event.dx;
-  offset[1] += d3.event.dy;
+const zoomMap = d3.zoom()
+  .scaleExtent([0.5, 3.0])
+  .translateExtent([
+    [-1000, -500],
+    [1000, 500]
+  ])
+  .on('zoom', () => {
+  console.log('d3.event is: ', d3.event);
+  const offset = [d3.event.transform.x, d3.event.transform.y];
+  const scale = d3.event.transform.k * 2000;
 
-  projection.translate(offset);
+  projection.translate(offset)
+    .scale(scale);
 
-  map.selectAll('path')
+  svg.selectAll('path')
     .transition()
     .attr('d', path);
 
-  map.selectAll('circle')
+  svg.selectAll('circle')
     .transition()
     .attr('cx', d => projection([d.lon, d.lat])[0])
     .attr('cy', d => projection([d.lon, d.lat])[1]);
@@ -37,7 +43,12 @@ const dragMap = d3.drag().on('drag', () => {
 
 const map = svg.append('g')
   .attr('id', 'map')
-  .call(dragMap);
+  .call(zoomMap)
+  .call(zoomMap.transform,
+    d3.zoomIdentity
+      .translate(chartWidth / 2, chartHeight / 2)
+      .scale(1)
+  );
 
 map.append('rect')
   .attr('x', 0)
@@ -96,31 +107,22 @@ const drawCities = () => {
 }
 
 d3.selectAll('#buttons button').on('click', (d, i, nodes) => {
-  const offset = projection.translate();
-  console.log('offset was now: ', offset);
-  const distance = 100;
-  const direction = d3.select(nodes[i]).attr('class');
+  let x = 0;
+  let y = 0;
+  let scale = 1;
+  let distance = 100;
+  let direction = d3.select(nodes[i]).attr('class');
 
   if (direction === 'up') {
-    offset[1] += distance;
+    y += distance;
   } else if (direction === 'down') {
-    offset[1] -= distance;
+    y -= distance;
   } else if (direction === 'left') {
-    offset[0] += distance;
+    x += distance;
   } else if (direction === 'right') {
-    offset[0] -= distance;
+    x -= distance;
   }
 
-  projection.translate(offset);
-
-  map.selectAll('path')
-    .transition()
-    .attr('d', path);
-  
-  map.selectAll('circle')
-    .transition()
-    .attr('cx', d => projection([d.lon, d.lat])[0])
-    .attr('cy', d => projection([d.lon, d.lat])[1]);
-
-  console.log('offset is now: ', offset);
+  map.transition()
+    .call(zoomMap.translateBy, x, y);
 })
