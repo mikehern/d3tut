@@ -5,3 +5,7 @@ tmp/
 .eslintrc
 
 .DS_store
+
+.env
+
+client/config.js
