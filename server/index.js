@@ -1,13 +1,14 @@
 const express = require('express');
 const app = express();
+const path = require('path');
 const d3 = require('d3');
 const googleTrends = require('google-trends-api');
 const fs = require('fs');
 
 const port = 3000;
 
-app.get('/', (req, res) => res.send('Test!'));
-
+app.get('/', (req, res) => res.send('You have arrived.'));
+app.use('/leaflet', express.static('./client/index.htm'));
 app.listen(port, () => console.log(`Listening on port ${port}`));
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -16,7 +17,7 @@ const saveOutput = (queryType, queryResults) => {
   fs.writeFile(`./tmp/${queryType}.txt`, queryResults, null, () => console.log('Completed write!')
 )};
 
-let query = {keyword: 'blockchain'};
+let query = {keyword: 'blockchain', resolution: 'CITY'};
 
 async function collectData() {
   let geoResult = await googleTrends.interestByRegion(query);
@@ -35,4 +36,4 @@ async function collectData() {
   await saveOutput('relatedTopics', relatedTopicsResult);
 }
 
-collectData().catch(err => console.error(err));
+// collectData().catch(err => console.error(err));
